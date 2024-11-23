@@ -31,7 +31,7 @@ urlpatterns = [
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import BookList, BookViewSet
+from api.views import BookList, BookViewSet
 from .views import BookViewSet
 
 # Initialize the router
