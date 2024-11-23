@@ -1,9 +1,7 @@
-from django.shortcuts import render
-
 from rest_framework.generics import ListAPIView
 from .models import Book
 from .serializers import BookSerializer
 
 class BookList(ListAPIView):
-    queryset = Book.objects.all()  # Fetch all books
-    serializer_class = BookSerializer  # Use the BookSerializer
+    queryset = Book.objects.all()  # Fetch all book records
+    serializer_class = BookSerializer  # Use the BookSerializer for serialization
