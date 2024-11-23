@@ -1,5 +1,5 @@
 from rest_framework.generics import ListAPIView
-from rest_framework import generics
+from rest_framework import generics , viewsets
 from .models import Book
 from .serializers import BookSerializer
 from rest_framework.viewsets import ModelViewSet  # Ensure this is correctly imported
@@ -10,7 +10,7 @@ class BookList(generics.ListAPIView):
     serializer_class = BookSerializer
     
 # CRUD operations for books
-class BookViewSet(ModelViewSet):
+class BookViewSet(viewsets.ModelViewSet):
     """
     A ViewSet for handling CRUD operations for the Book model.
     """
