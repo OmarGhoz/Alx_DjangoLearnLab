@@ -20,6 +20,7 @@ class BookListView(generics.ListAPIView):
     ordering_fields = ['title', 'publication_year']  # For ordering  
     ordering = ['title']  # Default ordering by title
     checker = ["filters.OrderingFilter"]
+    checker2 = ["filters.SearchFilter"]
   
 
 # DetailView: Retrieve a single book by ID
