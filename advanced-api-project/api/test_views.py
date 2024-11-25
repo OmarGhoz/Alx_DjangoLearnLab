@@ -1,11 +1,28 @@
 from rest_framework.test import APITestCase
 from rest_framework import status
+from django.contrib.auth.models import User
 from django.urls import reverse
 from .models import Book, Author
 
 class BookAPITestCase(APITestCase):
 
     def setUp(self):
+        # Create an author
+        self.author = Author.objects.create(name="Test Author")
+        # Create a book
+        self.book = Book.objects.create(
+            title="Test Book",
+            publication_year=2020,
+            author=self.author
+        )
+        # Define URLs
+        self.list_url = reverse('book-list')  # Update with the actual name of your URL
+        self.detail_url = reverse('book-detail', kwargs={'pk': self.book.id})
+        # Create a test user
+        self.user = User.objects.create_user(username='testuser', password='testpassword')
+        # Log in the test user
+        self.client.login(username='testuser', password='testpassword')
+
         # Create an author
         self.author = Author.objects.create(name="Test Author")
         # Create a book
