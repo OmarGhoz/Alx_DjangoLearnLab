@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.generics import ListAPIView
 from django_filters import rest_framework
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.filters import SearchFilter, OrderingFilter 
 from .models import Book
 from .serializers import BookSerializer
 
@@ -19,6 +19,7 @@ class BookListView(generics.ListAPIView):
     search_fields = ['title', 'author__name']  # For searching
     ordering_fields = ['title', 'publication_year']  # For ordering  
     ordering = ['title']  # Default ordering by title
+    checker = ["filters.OrderingFilter"]
   
 
 # DetailView: Retrieve a single book by ID
