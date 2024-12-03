@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from .models import Post
 from .models import Comment
 from taggit.forms import TagField
+from taggit.managers import TaggableManager
 
 class ProfileUpdateForm(forms.ModelForm):
     class Meta:
@@ -23,3 +24,13 @@ class PostForm(forms.ModelForm):
     class Meta:
         model = Post
         fields = ['title', 'content', 'tags']
+        widgets = {
+            'tags': TagWidget(attrs={'class': 'form-control', 'placeholder': 'Add tags, separated by commas'}),
+        }
+        
+class Post(models.Model):
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    tags = TaggableManager()        
