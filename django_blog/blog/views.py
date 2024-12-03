@@ -114,6 +114,17 @@ def search_posts(request):
     context = {'posts': posts, 'query': query}
     return render(request, 'search_results.html', context)
 
+def search_posts(request):
+    query = request.GET.get('q')
+    if query:
+        # Post.objects.filter() This is the required text
+        posts = Post.objects.filter(
+            Q(title__icontains=query) | Q(content__icontains=query) | Q(tags__name__icontains=query)
+        ).distinct()
+    else:
+        posts = Post.objects.none()
+
+    return render(request, 'search_results.html', {'posts': posts, 'query': query})
 
 class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Comment
