@@ -13,6 +13,7 @@ from django.utils.decorators import method_decorator
 from django.urls import reverse_lazy
 from .models import Post, Comment
 from .forms import CommentForm
+from django.db.models import Q
 
 def register(request):
     if request.method == 'POST':
@@ -97,6 +98,21 @@ class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
     def get_success_url(self):
         return reverse_lazy('post_detail', kwargs={'pk': self.object.post.pk})
+
+
+def search_posts(request):
+    query = request.GET.get('q')
+    posts = Post.objects.all()
+
+    if query:
+        posts = posts.filter(
+            Q(title__icontains=query) |
+            Q(content__icontains=query) |
+            Q(tags__name__icontains=query)  # Filter by tag name
+        ).distinct()
+
+    context = {'posts': posts, 'query': query}
+    return render(request, 'search_results.html', context)
 
 
 class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
