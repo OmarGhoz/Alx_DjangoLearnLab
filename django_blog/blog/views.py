@@ -70,7 +70,46 @@ class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     def test_func(self):
         post = self.get_object()
         return self.request.user == post.author
+    
+class CommentCreateView(LoginRequiredMixin, CreateView):
+    model = Comment
+    form_class = CommentForm
+    template_name = 'comment_form.html'
 
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        post = get_object_or_404(Post, pk=self.kwargs['pk'])
+        form.instance.post = post
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('post_detail', kwargs={'pk': self.kwargs['pk']})
+
+
+class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Comment
+    form_class = CommentForm
+    template_name = 'comment_form.html'
+
+    def test_func(self):
+        comment = self.get_object()
+        return self.request.user == comment.author
+
+    def get_success_url(self):
+        return reverse_lazy('post_detail', kwargs={'pk': self.object.post.pk})
+
+
+class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Comment
+    template_name = 'comment_confirm_delete.html'
+
+    def test_func(self):
+        comment = self.get_object()
+        return self.request.user == comment.author
+
+    def get_success_url(self):
+        return reverse_lazy('post_detail', kwargs={'pk': self.object.post.pk})
+    
 # Delete a post
 class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Post
@@ -94,26 +133,3 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     else:
         form = CommentForm()
     return render(request, 'blog/comment_form.html', {'form': form, 'post': post})
-
-@method_decorator(login_required, name='dispatch')
-class CommentUpdateView(UpdateView):
-    model = Comment
-    fields = ['content']
-    template_name = 'blog/comment_form.html'
-
-    def get_success_url(self):
-        return reverse_lazy('post-detail', kwargs={'pk': self.object.post.pk})
-
-    def get_queryset(self):
-        return self.model.objects.filter(author=self.request.user)
-
-@method_decorator(login_required, name='dispatch')
-class CommentDeleteView(DeleteView):
-    model = Comment
-    template_name = 'blog/comment_confirm_delete.html'
-
-    def get_success_url(self):
-        return reverse_lazy('post-detail', kwargs={'pk': self.object.post.pk})
-
-    def get_queryset(self):
-        return self.model.objects.filter(author=self.request.user)
