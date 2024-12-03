@@ -4,7 +4,9 @@ from .models import Post
 from .models import Comment
 from taggit.forms import TagField
 from taggit.managers import TaggableManager
-from taggit.forms import TagWidget
+from taggit.forms import TagWidget # TagWidget()
+
+# TagWidget() is used for managing tag input in the PostForm
 
 class ProfileUpdateForm(forms.ModelForm):
     class Meta:
