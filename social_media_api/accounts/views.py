@@ -5,6 +5,8 @@ from rest_framework import status
 from .serializers import RegisterSerializer, UserSerializer
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.views.generic import View
+from django.views import View
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
@@ -19,4 +21,14 @@ class RegisterView(APIView):
                 'token': str(refresh.access_token),
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 
+class LoginView(View):
+    def get(self, request):
+        # Handle GET request
+        return render(request, 'login.html')
+    
+
+class ProfileView(View):
+    def get(self, request, *args, **kwargs):
+        return render(request, 'profile.html', {})
