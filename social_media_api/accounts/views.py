@@ -22,21 +22,20 @@ from rest_framework.authtoken.models import Token
 # Get the custom user model
 CustomUser = get_user_model()
 
-class RegisterView(APIView):
+class RegisterView(generics.CreateAPIView):
     """
     Handles user registration.
     """
-    def post(self, request):
-        # Registering a new user, no need for IsAuthenticated here
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            # Create authentication token for the new user
-            token, _ = Token.objects.get_or_create(user=user)
-            return Response({"message": "User registered successfully", "token": token.key}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    serializer_class = UserSerializer
 
-class LoginView(APIView):
+    def perform_create(self, serializer):
+        user = serializer.save()
+        # Create authentication token for the new user
+        token, _ = Token.objects.get_or_create(user=user)
+        return Response({"message": "User registered successfully", "token": token.key}, status=status.HTTP_201_CREATED)
+
+
+class LoginView(generics.GenericAPIView):
     """
     Handles user login and returns authentication token.
     """
@@ -50,28 +49,19 @@ class LoginView(APIView):
             return Response({"token": token.key}, status=status.HTTP_200_OK)
         return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
-class ProfileView(APIView):
+
+class ProfileView(generics.RetrieveUpdateAPIView):
     """
     Allows users to view and update their profile.
     """
     permission_classes = [IsAuthenticated]
+    serializer_class = UserSerializer
 
-    def get(self, request):
-        # Fetch user details
-        user = request.user
-        serializer = UserSerializer(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    def get_object(self):
+        return self.request.user
 
-    def put(self, request):
-        # Update user profile
-        user = request.user
-        serializer = UserSerializer(user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({"message": "Profile updated successfully"}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class FollowUserView(APIView):
+class FollowUserView(generics.GenericAPIView):
     """
     Allows a user to follow another user.
     """
@@ -89,7 +79,8 @@ class FollowUserView(APIView):
         request.user.following.add(target_user)
         return Response({"message": f"You are now following {target_user.username}"}, status=status.HTTP_200_OK)
 
-class UnfollowUserView(APIView):
+
+class UnfollowUserView(generics.GenericAPIView):
     """
     Allows a user to unfollow another user.
     """
@@ -107,26 +98,32 @@ class UnfollowUserView(APIView):
         request.user.following.remove(target_user)
         return Response({"message": f"You have unfollowed {target_user.username}"}, status=status.HTTP_200_OK)
 
-class FollowingListView(APIView):
+
+class FollowingListView(generics.ListAPIView):
     """
     Displays the list of users the authenticated user is following.
     """
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        # Get list of users the authenticated user is following
-        following = request.user.following.all()
+    def get_queryset(self):
+        return self.request.user.following.all()
+
+    def list(self, request, *args, **kwargs):
+        following = self.get_queryset()
         data = [{"id": user.id, "username": user.username} for user in following]
         return Response(data, status=status.HTTP_200_OK)
 
-class FollowersListView(APIView):
+
+class FollowersListView(generics.ListAPIView):
     """
     Displays the list of users following the authenticated user.
     """
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        # Get list of users who follow the authenticated user
-        followers = request.user.followers.all()
+    def get_queryset(self):
+        return self.request.user.followers.all()
+
+    def list(self, request, *args, **kwargs):
+        followers = self.get_queryset()
         data = [{"id": user.id, "username": user.username} for user in followers]
         return Response(data, status=status.HTTP_200_OK)
