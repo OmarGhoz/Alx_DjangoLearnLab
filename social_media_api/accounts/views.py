@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import CustomUser
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.contrib.auth import get_user_model, authenticate
 from rest_framework import status
 from .serializers import RegisterSerializer, UserSerializer
 from rest_framework.permissions import AllowAny
@@ -15,15 +16,18 @@ from django.views import View
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from .serializers import FollowUnfollowSerializer
+from rest_framework.authtoken.models import Token
+
 
 # Get the custom user model
-User = get_user_model()
+CustomUser = get_user_model()
 
 class RegisterView(APIView):
     """
     Handles user registration.
     """
     def post(self, request):
+        # Registering a new user, no need for IsAuthenticated here
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
@@ -74,7 +78,8 @@ class FollowUserView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, user_id):
-        target_user = User.objects.filter(id=user_id).first()
+        # Fetch target user to follow
+        target_user = CustomUser.objects.filter(id=user_id).first()
         if not target_user:
             return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -91,7 +96,8 @@ class UnfollowUserView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, user_id):
-        target_user = User.objects.filter(id=user_id).first()
+        # Fetch target user to unfollow
+        target_user = CustomUser.objects.filter(id=user_id).first()
         if not target_user:
             return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -108,6 +114,7 @@ class FollowingListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        # Get list of users the authenticated user is following
         following = request.user.following.all()
         data = [{"id": user.id, "username": user.username} for user in following]
         return Response(data, status=status.HTTP_200_OK)
@@ -119,6 +126,7 @@ class FollowersListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        # Get list of users who follow the authenticated user
         followers = request.user.followers.all()
         data = [{"id": user.id, "username": user.username} for user in followers]
         return Response(data, status=status.HTTP_200_OK)
