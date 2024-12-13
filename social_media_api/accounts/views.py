@@ -56,32 +56,40 @@ def unfollow_user(request, user_id):
     return JsonResponse({'message': f'You have unfollowed {user_to_unfollow.username}.'})
 
 class FollowUserView(generics.GenericAPIView):
-    permission_classes = [IsAuthenticated]
-    serializer_class = FollowUnfollowSerializer
-
+    permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
+    
     def post(self, request, *args, **kwargs):
+        # Get the ID of the user to follow from the URL parameters
         user_to_follow_id = kwargs.get('user_id')
+        
         try:
+            # Retrieve the user to follow
             user_to_follow = CustomUser.objects.get(id=user_to_follow_id)
         except CustomUser.DoesNotExist:
             return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
-
+        
+        # Add the user to the "following" list of the current user
         request.user.following.add(user_to_follow)
+        
         return Response({'message': f'You are now following {user_to_follow.username}.'}, status=status.HTTP_200_OK)
 
 
 class UnfollowUserView(generics.GenericAPIView):
-    permission_classes = [IsAuthenticated]
-    serializer_class = FollowUnfollowSerializer
-
+    permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
+    
     def post(self, request, *args, **kwargs):
+        # Get the ID of the user to unfollow from the URL parameters
         user_to_unfollow_id = kwargs.get('user_id')
+        
         try:
+            # Retrieve the user to unfollow
             user_to_unfollow = CustomUser.objects.get(id=user_to_unfollow_id)
         except CustomUser.DoesNotExist:
             return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
-
+        
+        # Remove the user from the "following" list of the current user
         request.user.following.remove(user_to_unfollow)
+        
         return Response({'message': f'You have unfollowed {user_to_unfollow.username}.'}, status=status.HTTP_200_OK)
     
 class ListUsersView(generics.ListAPIView):
