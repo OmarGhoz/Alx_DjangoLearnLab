@@ -96,3 +96,5 @@ class ListUsersView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     queryset = CustomUser.objects.all()
     serializer_class = FollowUnfollowSerializer    
+
+#permissions.IsAuthenticated    
