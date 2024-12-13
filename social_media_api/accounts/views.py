@@ -12,6 +12,9 @@ from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.views.generic import View
 from django.views import View
+from rest_framework import generics, status
+from rest_framework.permissions import IsAuthenticated
+from .serializers import FollowUnfollowSerializer
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
@@ -51,3 +54,32 @@ def unfollow_user(request, user_id):
     user_to_unfollow = get_object_or_404(CustomUser, id=user_id)
     request.user.unfollow(user_to_unfollow)
     return JsonResponse({'message': f'You have unfollowed {user_to_unfollow.username}.'})
+
+class FollowUserView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = FollowUnfollowSerializer
+
+    def post(self, request, *args, **kwargs):
+        user_to_follow_id = kwargs.get('user_id')
+        try:
+            user_to_follow = CustomUser.objects.get(id=user_to_follow_id)
+        except CustomUser.DoesNotExist:
+            return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        request.user.following.add(user_to_follow)
+        return Response({'message': f'You are now following {user_to_follow.username}.'}, status=status.HTTP_200_OK)
+
+
+class UnfollowUserView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = FollowUnfollowSerializer
+
+    def post(self, request, *args, **kwargs):
+        user_to_unfollow_id = kwargs.get('user_id')
+        try:
+            user_to_unfollow = CustomUser.objects.get(id=user_to_unfollow_id)
+        except CustomUser.DoesNotExist:
+            return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        request.user.following.remove(user_to_unfollow)
+        return Response({'message': f'You have unfollowed {user_to_unfollow.username}.'}, status=status.HTTP_200_OK)
