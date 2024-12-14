@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from django.contrib.auth import get_user_model, authenticate
 from rest_framework import status
 from .serializers import RegisterSerializer, UserSerializer
+from .serializers import PostSerializer
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.views.generic import View
@@ -87,7 +88,7 @@ class UnfollowUserView(generics.GenericAPIView):
     """
     queryset = CustomUser.objects.all()
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def post(self, request, user_id):
         # Fetch target user to unfollow
         target_user = CustomUser.objects.filter(id=user_id).first()
@@ -105,7 +106,8 @@ class FollowingListView(generics.ListAPIView):
     """
     Displays the list of users the authenticated user is following.
     """
-    permission_classes = [IsAuthenticated]
+    queryset = CustomUser.objects.all()
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         return self.request.user.following.all()
@@ -120,8 +122,9 @@ class FollowersListView(generics.ListAPIView):
     """
     Displays the list of users following the authenticated user.
     """
-    permission_classes = [IsAuthenticated]
-
+    queryset = CustomUser.objects.all()
+    permission_classes = [permissions.IsAuthenticated]
+     
     def get_queryset(self):
         return self.request.user.followers.all()
 
@@ -129,3 +132,43 @@ class FollowersListView(generics.ListAPIView):
         followers = self.get_queryset()
         data = [{"id": user.id, "username": user.username} for user in followers]
         return Response(data, status=status.HTTP_200_OK)
+    
+
+class PostListView(generics.ListAPIView):
+    """
+    View to list posts from users the authenticated user is following.
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = PostSerializer
+
+    def get_queryset(self):
+        # Get the users that the current user is following
+        following_users = self.request.user.following.all()
+        # Fetch posts authored by these users, ordered by creation date
+        return Post.objects.filter(author__in=following_users).order_by('-created_at')
+
+
+class PostCreateView(generics.CreateAPIView):
+    """
+    View to create a new post.
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = PostSerializer
+
+    def perform_create(self, serializer):
+        # Save the post with the authenticated user as the author
+        serializer.save(author=self.request.user)
+
+
+class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    View to retrieve, update, or delete a specific post.
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = PostSerializer
+    queryset = Post.objects.all()
+
+    def get_queryset(self):
+        # Ensure users can only access their own posts or posts by authors they follow
+        following_users = self.request.user.following.all()
+        return Post.objects.filter(author__in=following_users) | Post.objects.filter(author=self.request.user)    
