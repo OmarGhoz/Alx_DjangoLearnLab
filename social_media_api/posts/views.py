@@ -29,3 +29,24 @@ def user_feed(request):
     posts = Post.objects.filter(author__in=followed_users).order_by('-created_at')
     serializer = PostSerializer(posts, many=True)
     return Response(serializer.data)
+
+class FeedView(APIView):
+    """
+    Generates a feed of posts from users the current user follows.
+    Returns posts ordered by creation date, with the most recent posts first.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Get the list of users the authenticated user is following
+        following_users = request.user.following.all()
+
+        # Filter posts authored by these users and order them by creation date
+        posts = Post.objects.filter(author__in=following_users).order_by('-created_at') #Post.objects.filter(author__in=following_users).order_by('-created_at')
+
+
+        # Serialize the posts
+        serializer = PostSerializer(posts, many=True)
+
+        # Return the serialized posts
+        return Response(serializer.data, status=status.HTTP_200_OK)    
