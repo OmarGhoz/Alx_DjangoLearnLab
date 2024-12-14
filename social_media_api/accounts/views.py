@@ -172,3 +172,23 @@ class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
         # Ensure users can only access their own posts or posts by authors they follow
         following_users = self.request.user.following.all()
         return Post.objects.filter(author__in=following_users) | Post.objects.filter(author=self.request.user)    
+    
+class FeedView(APIView):
+    """
+    Generates a feed of posts from users the current user follows.
+    Returns posts ordered by creation date, with the most recent posts first.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Get the list of users the authenticated user is following
+        following_users = request.user.following.all()
+
+        # Filter posts authored by these users and order them by creation date
+        posts = Post.objects.filter(author__in=following_users).order_by('-created_at')
+
+        # Serialize the posts
+        serializer = PostSerializer(posts, many=True)
+
+        # Return the serialized posts
+        return Response(serializer.data, status=status.HTTP_200_OK)    
