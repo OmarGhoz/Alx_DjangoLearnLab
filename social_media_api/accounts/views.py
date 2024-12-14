@@ -185,7 +185,8 @@ class FeedView(APIView):
         following_users = request.user.following.all()
 
         # Filter posts authored by these users and order them by creation date
-        posts = Post.objects.filter(author__in=following_users).order_by('-created_at')
+        posts = Post.objects.filter(author__in=following_users).order_by('-created_at') #Post.objects.filter(author__in=following_users).order_by('-created_at')
+
 
         # Serialize the posts
         serializer = PostSerializer(posts, many=True)
